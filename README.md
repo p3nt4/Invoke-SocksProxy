@@ -1,5 +1,6 @@
 # Invoke-SocksProxy
 Creates a Socks proxy using powershell.
+
 Supports both Socks4 and Socks5 connections.
 
 # Examples
