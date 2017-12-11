@@ -8,7 +8,7 @@ License: MIT
  
 .DESCRIPTION
  
-Create a Socks proxy using powershell.
+Creates a Socks proxy using powershell.
  
 Supports both Socks4 and Socks5 connections.
 
