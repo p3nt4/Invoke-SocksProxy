@@ -89,7 +89,6 @@ Invoke-PortFwd -bindPort 33389 -destHost 127.0.0.1 -destPort 3389
             return $ip
         }else{
             $ip2 = [System.Net.Dns]::GetHostAddresses($ip)[0].IPAddressToString;
-            Write-Host "$ip resolved to $ip2"
         }
         return $ip2
     }
