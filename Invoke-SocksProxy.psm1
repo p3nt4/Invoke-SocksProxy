@@ -123,7 +123,7 @@ Invoke-PortFwd -bindPort 33389 -destHost 127.0.0.1 -destPort 3389
             if($atyp -eq 1){
                 $ipv4 = New-Object System.Byte[] 4
                 $cliStream.Read($ipv4,0,4) | Out-Null
-                $ipAddress = [System.Net.IPAddress]::New($ipv4)
+                $ipAddress = New-Object System.Net.IPAddress(,$ipv4)
                 $hostName = $ipAddress.ToString()
             }elseif($atyp -eq 3){
                 $cliStream.Read($buffer,4,1) | Out-Null
@@ -178,7 +178,7 @@ Invoke-PortFwd -bindPort 33389 -destHost 127.0.0.1 -destPort 3389
             $destPort = $buffer[2]*256 + $buffer[3]
             $ipv4 = New-Object System.Byte[] 4
             $cliStream.Read($ipv4,0,4) | Out-Null
-            $destHost = [System.Net.IPAddress]::New($ipv4)
+            $destHost = New-Object System.Net.IPAddress(,$ipv4)
             $buffer[0]=1
             while ($buffer[0] -ne 0){
                 $cliStream.Read($buffer,0,1)
