@@ -17,6 +17,7 @@ Invoke-PortFwd -bindPort 33389 -destHost 127.0.0.1 -destPort 3389
 ```
 # Limitations
 - This is only a subset of the Socks 4 and 5 protocols: It does not support authentication, It does not support UDP or bind requests.
+- Used connections are not always dismissed, causing a memory leak.
 - New features will be implemented in the future. PR are welcome.
 
 
