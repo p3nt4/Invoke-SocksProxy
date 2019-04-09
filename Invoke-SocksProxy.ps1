@@ -1,0 +1,1 @@
+powershell -c "Import-Module .\Invoke-SocksProxy.psm1; Invoke-SocksProxy"
