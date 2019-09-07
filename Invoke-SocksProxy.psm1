@@ -184,8 +184,9 @@ function Invoke-SocksProxy{
         write-host "Listening on port $bindPort..."
         while($true){
             $client = $listener.AcceptTcpClient()
+            $cliStream = $client.GetStream()
             Write-Host "New Connection from " $client.Client.RemoteEndPoint
-            $vars = [PSCustomObject]@{"cliConnection"=$client; "rsp"=$rsp}
+            $vars = [PSCustomObject]@{"cliConnection"=$client; "rsp"=$rsp; "cliStream" = $cliStream}
             $PS3 = [PowerShell]::Create()
             $PS3.RunspacePool = $rsp;
             $PS3.AddScript($SocksConnectionMgr).AddArgument($vars) | Out-Null
