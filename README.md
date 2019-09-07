@@ -13,13 +13,16 @@ Invoke-SocksProxy -bindPort 1234
 
 Create a "reverse" Socks 4/5 proxy on port 1234 of a remote host:
 ```
+On the remote host: 
+python ReverseSocksProxyHandler.py 1234 1080
+
+On the local host:
 Import-Module .\Invoke-SocksProxy.psm1
 Invoke-ReverseSocksProxy -remotePort 1234 -remoteHost 192.168.49.130
 ```
 
 The "reverse" Socks 4/5 proxy can go through the system proxy:
 ```
-Import-Module .\Invoke-SocksProxy.psm1
 Invoke-ReverseSocksProxy -remotePort 1234 -remoteHost 192.168.49.130 -useSystemProxy
 ```
 Credit: https://github.com/Arno0x/PowerShellScripts/blob/master/proxyTunnel.ps1
