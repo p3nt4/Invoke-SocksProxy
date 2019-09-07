@@ -16,24 +16,73 @@ This is only a subset of the Socks 4 and 5 protocols: It does not support authen
  
 New features will be implemented in the future. PRs are welcome.
  
- .EXAMPLE
+ 
+.EXAMPLE
  
 Create a Socks proxy on port 1234:
 Invoke-SocksProxy -bindPort 1234
-
-Change the number of threads from 200 to 400:
-Invoke-SocksProxy -bindPort 1234 -threads 400
+ 
+Create a simple tcp port forward:
+Invoke-PortFwd -bindPort 33389 -destHost 127.0.0.1 -destPort 3389
+ 
+ 
 #>
  
  
+[ScriptBlock]$TcpConnectionMgr = {
+    param($vars)
+    $srvConnection=$vars.srvConnection
+    $cliConnection=$vars.cliConnection
+    $Script = {
+           param($vars)
+        $vars.inStream.CopyToAsync($vars.outStream)   
+    }
+    $cliStream = $cliConnection.GetStream()
+    $srvStream = $srvConnection.GetStream() 
+    $vars2 = [PSCustomObject]@{"inStream"=$cliStream;"outStream"=$srvStream}
+    $PS = [PowerShell]::Create()
+    $PS.AddScript($Script).AddArgument($vars2) | Out-Null
+    [System.IAsyncResult]$AsyncJobResult = $null
+ 
+    $vars3 = [PSCustomObject]@{"inStream"=$srvStream;"outStream"=$cliStream}
+    $PS2 = [PowerShell]::Create()
+    $PS2.AddScript($Script).AddArgument($vars3) | Out-Null
+    [System.IAsyncResult]$AsyncJobResult2 = $null
+ 
+    try
+    {
+        $AsyncJobResult = $PS.BeginInvoke()
+        $AsyncJobResult2 = $PS2.BeginInvoke()
+        while($cliConnection.Connected -and $srvConnection.Connected){
+            sleep -m 100;
+        }
+    }
+    catch {
+    }
+    finally {
+        if ($cliConnection -ne $null) {
+            $cliConnection.Close()
+            $cliConnection.Dispose()
+            $cliConnection = $null
+        }
+        if ($srvConnection -ne $null) {
+            $srvConnection.Close()
+            $srvConnection.Dispose()
+            $srvConnection = $null
+        }
+        if ($PS -ne $null -and $AsyncJobResult -ne $null) {
+            $PS.EndInvoke($AsyncJobResult) | Out-Null
+            $PS.Dispose()
+        }
+        if ($PS2 -ne $null -and $AsyncJobResult2 -ne $null) {
+            $PS2.EndInvoke($AsyncJobResult2) | Out-Null
+            $PS2.Dispose()
+        }
+    }
+}
+ 
 [ScriptBlock]$SocksConnectionMgr = {
     param($vars)
-    $Script = {
-            param($vars)
-            $vars.inStream.CopyTo($vars.outStream)
-            Exit
-    }
-    $rsp=$vars.rsp;
     function Get-IpAddress{
         param($ip)
         IF ($ip -as [ipaddress]){
@@ -44,10 +93,11 @@ Invoke-SocksProxy -bindPort 1234 -threads 400
         return $ip2
     }
     $client=$vars.cliConnection
+    $TcpConnectionMgr=$vars.TcpConnectionMgr
     $buffer = New-Object System.Byte[] 32
     try
     {
-        $cliStream = $vars.cliStream
+        $cliStream = $client.GetStream()
         $cliStream.Read($buffer,0,2) | Out-Null
         $socksVer=$buffer[0]
         if ($socksVer -eq 5){
@@ -102,12 +152,14 @@ Invoke-SocksProxy -bindPort 1234 -threads 400
                 $buffer[5]=0
                 $cliStream.Write($buffer,0,10)
                 $cliStream.Flush()
-                $srvStream = $tmpServ.GetStream() 
-                $AsyncJobResult2 = $srvStream.CopyToAsync($cliStream)
-                $AsyncJobResult = $cliStream.CopyToAsync($srvStream)
-                $AsyncJobResult.AsyncWaitHandle.WaitOne();
-                $AsyncJobResult2.AsyncWaitHandle.WaitOne();
-                
+                $vars = [PSCustomObject]@{"cliConnection"=$client;"srvConnection"= $tmpServ}
+                $PS3 = [PowerShell]::Create()
+                $PS3.AddScript($TcpConnectionMgr).AddArgument($vars) | Out-Null
+                [System.IAsyncResult]$AsyncJobResult3 = $null
+                $AsyncJobResult3 = $PS3.BeginInvoke()
+                while($client.Connected -and $tmpServ.Connected){
+                    sleep -m 100;
+                }
             }
             else{
                 $buffer[1]=4
@@ -132,7 +184,6 @@ Invoke-SocksProxy -bindPort 1234 -threads 400
                 $cliStream.Read($buffer,0,1)
             }
             $tmpServ = New-Object System.Net.Sockets.TcpClient($destHost, $destPort)
-            
             if($tmpServ.Connected){
                 $buffer[0]=0
                 $buffer[1]=90
@@ -140,61 +191,58 @@ Invoke-SocksProxy -bindPort 1234 -threads 400
                 $buffer[3]=0
                 $cliStream.Write($buffer,0,8)
                 $cliStream.Flush()
-                $srvStream = $tmpServ.GetStream() 
-                $AsyncJobResult2 = $srvStream.CopyToAsync($cliStream)
-                $AsyncJobResult = $cliStream.CopyTo($srvStream)
-                $AsyncJobResult.AsyncWaitHandle.WaitOne();
-                $AsyncJobResult2.AsyncWaitHandle.WaitOne();
+                $vars = [PSCustomObject]@{"cliConnection"=$client;"srvConnection"= $tmpServ}
+                $PS3 = [PowerShell]::Create()
+                $PS3.AddScript($TcpConnectionMgr).AddArgument($vars) | Out-Null
+                [System.IAsyncResult]$AsyncJobResult3 = $null
+                $AsyncJobResult3 = $PS3.BeginInvoke()
+                while($client.Connected -and $tmpServ.Connected){
+                    sleep -m 100;
+                }
             }
        }else{
             throw "Unknown socks version"
        }
     }
     catch {
-        #$_ >> "error.log"
     }
     finally {
         if ($client -ne $null) {
+            $client.Close()
             $client.Dispose()
+            $client = $null
         }
-        if ($tmpServ -ne $null) {
-            $tmpServ.Dispose()
+        if ($PS3 -ne $null -and $AsyncJobResult3 -ne $null) {
+            $PS3.EndInvoke($AsyncJobResult3) | Out-Null
+            $PS3.Dispose()
         }
-        Exit;
     }
 }
  
-
 function Invoke-SocksProxy{
     param (
  
             [String]$bindIP = "0.0.0.0",
  
-            [Int]$bindPort = 1080,
-
-            [Int]$threads = 200
+            [Int]$bindPort = 1080
  
      )
     try{
         $listener = new-object System.Net.Sockets.TcpListener([System.Net.IPAddress]::Parse($bindIP), $bindPort)
         $listener.start()
-        $rsp = [runspacefactory]::CreateRunspacePool(1,$threads);
-        $rsp.CleanupInterval = New-TimeSpan -Seconds 30;
-        $rsp.open();
         write-host "Listening on port $bindPort..."
         while($true){
             $client = $listener.AcceptTcpClient()
             Write-Host "New Connection from " $client.Client.RemoteEndPoint
-            $vars = [PSCustomObject]@{"cliConnection"=$client; "rsp"=$rsp}
+            $vars = [PSCustomObject]@{"cliConnection"=$client;"TcpConnectionMgr"=$TcpConnectionMgr}
             $PS3 = [PowerShell]::Create()
-            $PS3.RunspacePool = $rsp;
             $PS3.AddScript($SocksConnectionMgr).AddArgument($vars) | Out-Null
-            $PS3.BeginInvoke() | Out-Null
-            Write-Host "Threads Left:" $rsp.GetAvailableRunspaces()
+            [System.IAsyncResult]$AsyncJobResult3 = $null
+            $AsyncJobResult3 = $PS3.BeginInvoke()
         }
      }
     catch{
-        throw $_
+        write-host $_.Exception.Message
     }
     finally{
         write-host "Server closed."
@@ -202,104 +250,53 @@ function Invoke-SocksProxy{
                   $listener.Stop()
            }
         if ($client -ne $null) {
+            $client.Close()
             $client.Dispose()
             $client = $null
         }
         if ($PS3 -ne $null -and $AsyncJobResult3 -ne $null) {
             $PS3.EndInvoke($AsyncJobResult3) | Out-Null
-            $PS3.Runspace.Close()
-            $PS3.Dispose()
-        }
-    }
-}
-
-# Credit to Arno0x for this technique
-function getProxyConnection{
-
-    param (
- 
-            [String]$remoteHost,
- 
-            [Int]$remotePort
-
-     )
-    $request = [System.Net.HttpWebRequest]::Create("http://" + $remoteHost + ":" + $remotePort ) 
-    $request.Method = "CONNECT";
-    $proxy = [System.Net.WebRequest]::GetSystemWebProxy();
-    $proxy.Credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials;
-    $request.Proxy = $proxy;
-    $serverResponse = $request.GetResponse()
-    $responseStream = $serverResponse.GetResponseStream()
-    $BindingFlags= [Reflection.BindingFlags] "NonPublic,Instance"
-    $rsType = $responseStream.GetType()
-    $connectionProperty = $rsType.GetProperty("Connection", $BindingFlags)
-    $connection = $connectionProperty.GetValue($responseStream, $null)
-    $connectionType = $connection.GetType()
-    $networkStreamProperty = $connectionType.GetProperty("NetworkStream", $BindingFlags)
-    $serverStream = $networkStreamProperty.GetValue($connection, $null)
-    return $connection, $serverStream
-}
-
-
-## EXPERIMENTAL.....
-function Invoke-ReverseSocksProxy{
-    param (
- 
-            [String]$remoteHost = "127.0.0.1",
- 
-            [Int]$remotePort = 1080,
-
-            [Switch]$useSystemProxy = $false,
-
-            [Int]$threads = 200
-
-     )
-    try{
-        $rsp = [runspacefactory]::CreateRunspacePool(1,$threads);
-        $rsp.CleanupInterval = New-TimeSpan -Seconds 30;
-        $rsp.open();
-        while($true){
-            if($useSystemProxy -eq $false){
-                $client = New-Object System.Net.Sockets.TcpClient($remoteHost, $remotePort)
-                $cliStream = $client.GetStream()
-                }else{
-                $ret = getProxyConnection -remoteHost $remoteHost -remotePort $remotePort
-                $client = $ret[0]
-                $cliStream = $ret[1]
-            }
-            Write-Host "Connecting to: " $remoteHost ":" $remotePort
-            $buffer = New-Object System.Byte[] 32
-            $cliStream.Read($buffer,0,5) | Out-Null
-            $vars = [PSCustomObject]@{"cliConnection"=$client; "rsp"=$rsp; "cliStream" = $cliStream}
-            $PS3 = [PowerShell]::Create()
-            $PS3.RunspacePool = $rsp;
-            $PS3.AddScript($SocksConnectionMgr).AddArgument($vars) | Out-Null
-            $PS3.BeginInvoke() | Out-Null
-            Write-Host "Threads Left:" $rsp.GetAvailableRunspaces()
-        }
-     }
-    catch{
-        throw $_
-    }
-    finally{
-        write-host "Server closed."
-        if ($listener -ne $null) {
-                  $listener.Stop()
-           }
-        if ($client -ne $null) {
-            $client.Dispose()
-            $client = $null
-        }
-        if ($PS3 -ne $null -and $AsyncJobResult3 -ne $null) {
-            $PS3.EndInvoke($AsyncJobResult3) | Out-Null
-            $PS3.Runspace.Close()
             $PS3.Dispose()
         }
     }
 }
  
-
-
+function Invoke-PortFwd{
+    param (
+ 
+            [String]$destHost,
+ 
+            [Int]$destPort,
+ 
+            [String]$bindIP = "0.0.0.0",
+ 
+            [Int]$bindPort
+ 
+     )
+    $destIp = Get-IpAddress $destHost
+    $listener = new-object System.Net.Sockets.TcpListener([System.Net.IPAddress]::Parse($bindIP), $bindPort)
+    $listener.start()
+    write-host "Listening on port $bindPort..."
+    while($true){
+        $client = $listener.AcceptTcpClient()
+        Write-Host "New Connection"
+        $serv = New-Object System.Net.Sockets.TcpClient($destIp, $destPort)
+        $vars = [PSCustomObject]@{"cliConnection"=$client;"srvConnection"= $serv}
+        $PS3 = [PowerShell]::Create()
+        $PS3.AddScript($TcpConnectionMgr).AddArgument($vars) | Out-Null
+        [System.IAsyncResult]$AsyncJobResult3 = $null
+        $AsyncJobResult3 = $PS3.BeginInvoke()
+    }
+    if ($listener -ne $null) {
+              $listener.Stop()
+       }
+    if ($PS3 -ne $null -and $AsyncJobResult3 -ne $null) {
+        $PS3.EndInvoke($AsyncJobResult3) | Out-Null
+        $PS3.Dispose()
+    }
+    write-host "Connection closed."
+}
+ 
 function Get-IpAddress{
     param($ip)
     IF ($ip -as [ipaddress]){
@@ -311,4 +308,4 @@ function Get-IpAddress{
     return $ip2
 }
 export-modulemember -function Invoke-SocksProxy
-export-modulemember -function Invoke-ReverseSocksProxy
+export-modulemember -function Invoke-PortFwd
