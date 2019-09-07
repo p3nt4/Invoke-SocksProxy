@@ -17,7 +17,8 @@ Import-Module .\Invoke-SocksProxy.psm1
 Invoke-ReverseSocksProxy -remotePort 1234 -remoteHost 192.168.49.130
 ```
 
-The "reverse" Socks 4/5 proxy can go through the system proxy, credit to Arno0x for this technique:
+The "reverse" Socks 4/5 proxy can go through the system proxy:
+Credit: https://github.com/Arno0x/PowerShellScripts/blob/master/proxyTunnel.ps1
 ```
 Import-Module .\Invoke-SocksProxy.psm1
 Invoke-ReverseSocksProxy -remotePort 1234 -remoteHost 192.168.49.130 -useSystemProxy
