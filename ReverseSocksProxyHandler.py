@@ -42,4 +42,7 @@ def forward(source, destination):
             destination.shutdown(socket.SHUT_WR)
 
 if __name__ == '__main__':
-    main(sys.argv[1], sys.argv[2])
+    if len(sys.argv) < 3:
+	    print("Usage:{} <handlerPort> <proxyPort>".format(sys.argv[0]))
+    else:
+	    main(sys.argv[1], sys.argv[2])
