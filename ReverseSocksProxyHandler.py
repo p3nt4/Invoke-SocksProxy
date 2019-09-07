@@ -21,9 +21,9 @@ def server(handlerPort,proxyPort):
         dock_socket2.listen(5)
         while True:
             client_socket = dock_socket.accept()[0]
-            print("Reverse Socks Connection Recieved")
+            print("Reverse Socks Connection Received")
             client_socket2 = dock_socket2.accept()[0]
-            print("Socks Connection Recieved")
+            print("Socks Connection Received")
             client_socket.send("HELLO")
             thread.start_new_thread(forward, (client_socket, client_socket2))
             thread.start_new_thread(forward, (client_socket2, client_socket))
