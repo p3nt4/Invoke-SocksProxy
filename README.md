@@ -1,5 +1,5 @@
 # Invoke-SocksProxy
-Creates a Socks proxy using powershell.
+Creates a local or "reverse" Socks proxy using powershell.
 
 Supports both Socks4 and Socks5 connections.
 
@@ -9,6 +9,18 @@ Create a Socks 4/5 proxy on port 1234:
 ```
 Import-Module .\Invoke-SocksProxy.psm1
 Invoke-SocksProxy -bindPort 1234
+```
+
+Create a "reverse" Socks 4/5 proxy on port 1234 of a remote host:
+```
+Import-Module .\Invoke-SocksProxy.psm1
+Invoke-ReverseSocksProxy -remotePort 1234 -remoteHost 192.168.49.130
+```
+
+The "reverse" Socks 4/5 proxy can go through the system proxy, credit to Arno0x for this technique:
+```
+Import-Module .\Invoke-SocksProxy.psm1
+Invoke-ReverseSocksProxy -remotePort 1234 -remoteHost 192.168.49.130 -useSystemProxy
 ```
 
 Increase the number of threads from 200 to 400
