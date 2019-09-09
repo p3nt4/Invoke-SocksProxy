@@ -246,12 +246,6 @@ function getProxyConnection{
 }
 
 
-[Net.Security.RemoteCertificateValidationCallback] $VerifyCertFingerprint = {
-    Write-Host $args[1].GetCertHash()
-    return $true
-}
-
-
 ## EXPERIMENTAL.....
 function Invoke-ReverseSocksProxy{
     param (
