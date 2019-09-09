@@ -5,11 +5,20 @@ Supports both Socks4 and Socks5 connections.
 
 # Examples
 
+## Local 
+
 Create a Socks 4/5 proxy on port 1234:
 ```
 Import-Module .\Invoke-SocksProxy.psm1
 Invoke-SocksProxy -bindPort 1234
 ```
+
+Increase the number of threads from 200 to 400
+```
+Import-Module .\Invoke-SocksProxy.psm1
+Invoke-SocksProxy -threads 400
+```
+## Remote
 
 Create a "reverse" Socks 4/5 proxy on port 1234 of a remote host:
 ```
@@ -36,12 +45,6 @@ Invoke-ReverseSocksProxy -remotePort 1234 -remoteHost 192.168.49.130 -useSystemP
 
 Credit: https://github.com/Arno0x/PowerShellScripts/blob/master/proxyTunnel.ps1
 
-
-Increase the number of threads from 200 to 400
-```
-Import-Module .\Invoke-SocksProxy.psm1
-Invoke-SocksProxy -threads 400
-```
 
 # Limitations
 - This is only a subset of the Socks 4 and 5 protocols: It does not support authentication, It does not support UDP or bind requests.
