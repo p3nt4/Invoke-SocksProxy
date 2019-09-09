@@ -13,18 +13,27 @@ Invoke-SocksProxy -bindPort 1234
 
 Create a "reverse" Socks 4/5 proxy on port 1234 of a remote host:
 ```
-On the remote host: 
-python ReverseSocksProxyHandler.py 1234 1080
+# On the remote host: 
+# Generate a private key and self signe cert
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout private.key -out cert.pem
 
-On the local host:
+# Get the certificate fingerprint to verify it:
+openssl x509 -in cert.pem -noout -sha1 -fingerprint | cut -d "=" -f 2 | tr -d ":"
+
+# Start the handler
+python ReverseSocksProxyHandler.py 1234 1080 ./cert.pem ./private.key
+
+# On the local host:
 Import-Module .\Invoke-SocksProxy.psm1
-Invoke-ReverseSocksProxy -remotePort 1234 -remoteHost 192.168.49.130
+Invoke-ReverseSocksProxy -remotePort 1234 -remoteHost 192.168.49.130 
+
+# Go through the system proxy:
+Invoke-ReverseSocksProxy -remotePort 1234 -remoteHost 192.168.49.130 -useSystemProxy
+
+# Validate certificate
+Invoke-ReverseSocksProxy -remotePort 1234 -remoteHost 192.168.49.130 -useSystemProxy -certFingerprint '93061FDB30D69A435ACF96430744C5CC5473D44E'
 ```
 
-The "reverse" Socks 4/5 proxy can go through the system proxy:
-```
-Invoke-ReverseSocksProxy -remotePort 1234 -remoteHost 192.168.49.130 -useSystemProxy
-```
 Credit: https://github.com/Arno0x/PowerShellScripts/blob/master/proxyTunnel.ps1
 
 
