@@ -23,7 +23,7 @@ Invoke-SocksProxy -threads 400
 Create a "reverse" Socks 4/5 proxy on port 1234 of a remote host:
 ```
 # On the remote host: 
-# Generate a private key and self signe cert
+# Generate a private key and self signed cert
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout private.key -out cert.pem
 
 # Get the certificate fingerprint to verify it:
