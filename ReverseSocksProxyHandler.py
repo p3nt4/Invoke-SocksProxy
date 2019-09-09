@@ -2,6 +2,7 @@ import socket
 import sys
 import thread
 import time
+import ssl
 
 def main(handlerPort,proxyPort):
     thread.start_new_thread(server, (handlerPort,proxyPort))
@@ -10,6 +11,8 @@ def main(handlerPort,proxyPort):
 
 
 def server(handlerPort,proxyPort):
+    context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    context.load_cert_chain('./cert.pem', './private.key')
     try:
         dock_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         dock_socket.bind(('', int(handlerPort)))
@@ -20,13 +23,18 @@ def server(handlerPort,proxyPort):
         print("Socks Proxy listening on: " + proxyPort)
         dock_socket2.listen(5)
         while True:
-            client_socket = dock_socket.accept()[0]
-            print("Reverse Socks Connection Received")
-            client_socket2 = dock_socket2.accept()[0]
-            print("Socks Connection Received")
-            client_socket.send("HELLO")
-            thread.start_new_thread(forward, (client_socket, client_socket2))
-            thread.start_new_thread(forward, (client_socket2, client_socket))
+            try:
+                clear_socket = dock_socket.accept()[0]
+                client_socket = context.wrap_socket(clear_socket, server_side=True)
+                print("Reverse Socks Connection Received")
+                client_socket2 = dock_socket2.accept()[0]
+                print("Socks Connection Received")
+                client_socket.send("HELLO")
+                thread.start_new_thread(forward, (client_socket, client_socket2))
+                thread.start_new_thread(forward, (client_socket2, client_socket))
+            except:
+                time.sleep(200)
+                pass
     finally:
         time.sleep(200)
         thread.start_new_thread(server, (handlerPort,proxyPort))
