@@ -224,16 +224,15 @@ function getProxyConnection{
             [Int]$remotePort
 
      )
-    #Sleep -Milliseconds 100
+    #Sleep -Milliseconds 500
     $request = [System.Net.HttpWebRequest]::Create("http://" + $remoteHost + ":" + $remotePort ) 
     $request.Method = "CONNECT";
     $proxy = [System.Net.WebRequest]::GetSystemWebProxy();
     $proxy.Credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials;
     $request.Proxy = $proxy;
-    $timeout = $request.timeout;
-    $request.timeout = 1000
-    $serverResponse = $request.GetResponse()
-    $request.timeout = $timeout
+    $request.timeout = 1000;
+    $serverResponse = $request.GetResponse();
+    $request.timeout = 100000;
     $responseStream = $serverResponse.GetResponseStream()
     $BindingFlags= [Reflection.BindingFlags] "NonPublic,Instance"
     $rsType = $responseStream.GetType()
@@ -284,14 +283,15 @@ function Invoke-ReverseSocksProxy{
                 $cliStream.AuthenticateAsClient($remoteHost)
                 Write-Host "Connected"
                 $buffer = New-Object System.Byte[] 32
-                $readTimeout = $cliStream.ReadTimeout
-                $cliStream.ReadTimeout = 10000
+                $cliStream.ReadTimeout = 30000
                 $cliStream.Read($buffer,0,5) | Out-Null
                 $message = [System.Text.Encoding]::ASCII.GetString($buffer)
                 if($message -ne "HELLO"){
                     throw "No Client connected";
+                }else{
+                    Write-Host "Connection received"
                 }
-                $cliStream.ReadTimeout =$readTimeout
+                $cliStream.ReadTimeout = 100000;
                 $vars = [PSCustomObject]@{"cliConnection"=$client; "rsp"=$rsp; "cliStream" = $cliStream}
                 $PS3 = [PowerShell]::Create()
                 $PS3.RunspacePool = $rsp;
@@ -302,11 +302,11 @@ function Invoke-ReverseSocksProxy{
                 #Write-Host $_.Exception.Message
                 if ($_.Exception.message -eq 'Exception calling "AuthenticateAsClient" with "1" argument(s): "The remote certificate is invalid according to the validation procedure."'){
                     throw $_
-                    $client.Dispose()
                 }
                 if ($_.Exception.message -eq 'Exception calling "AuthenticateAsClient" with "1" argument(s): "Authentication failed because the remote party has closed the transport stream."'){
                     sleep 5
                 }
+
                 if (($_.Exception.Message.Length -ge 121) -and $_.Exception.Message.substring(0,120) -eq 'Exception calling ".ctor" with "2" argument(s): "No connection could be made because the target machine actively refused'){
                     sleep 5
                 }
@@ -314,7 +314,7 @@ function Invoke-ReverseSocksProxy{
                     $client.Close()
                     $client.Dispose()
                 }catch{}
-                sleep -Milliseconds 200
+                    sleep -Milliseconds 200
                 }
         }
      }
