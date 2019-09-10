@@ -20,7 +20,7 @@ Invoke-SocksProxy -threads 400
 ```
 ## Remote
 
-Create a "reverse" Socks 4/5 proxy on port 1234 of a remote host:
+Create a "reverse" Socks 4/5 proxy on port 1080 of a remote host:
 ```
 # On the remote host: 
 # Generate a private key and self signed cert
