@@ -24,6 +24,10 @@ def handlerServer(q,handlerPort,certificate,privateKey):
                 clear_socket, address = dock_socket.accept()
                 client_socket = context.wrap_socket(clear_socket, server_side=True)
                 print("Reverse Socks Connection Received: {}:{}".format(address[0],address[1]))
+                try:
+                    q.get(False)
+                except:
+                    pass
                 q.put(client_socket)
             except Exception as e:
                 print(e)
@@ -51,7 +55,7 @@ def server(handlerPort,proxyPort,certificate,privateKey):
     try:
         dock_socket2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         dock_socket2.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        dock_socket2.bind(('127.0.0.1', int(proxyPort)))
+        dock_socket2.bind(('', int(proxyPort)))
         dock_socket2.listen(5)
         print("Socks Server listening on: " + proxyPort)
         while True:
