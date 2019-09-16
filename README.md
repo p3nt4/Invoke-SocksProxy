@@ -1,5 +1,5 @@
 # Invoke-SocksProxy
-Creates a local or "reverse" Socks proxy using powershell.
+Creates a local or "reverse" Socks proxy using powershell, that can go through system proxies.
 
 Supports both Socks4 and Socks5 connections.
 
