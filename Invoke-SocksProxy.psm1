@@ -16,7 +16,7 @@ This is only a subset of the Socks 4 and 5 protocols: It does not support authen
  
 New features will be implemented in the future. PRs are welcome.
  
- .EXAMPLE LOCAL
+ .EXAMPLE_LOCAL
  
 # Create a Socks proxy on port 1234:
 Invoke-SocksProxy -bindPort 1234
@@ -24,7 +24,7 @@ Invoke-SocksProxy -bindPort 1234
 # Change the number of threads from 200 to 400:
 Invoke-SocksProxy -bindPort 1234 -threads 400
 
- .EXAMPLE REMOTE
+ .EXAMPLE_REVERSE
  
 # On the remote host: 
 # Generate a private key and self signed cert
