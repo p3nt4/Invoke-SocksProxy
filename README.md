@@ -43,7 +43,7 @@ Invoke-ReverseSocksProxy -remotePort 443 -remoteHost 192.168.49.130 -useSystemPr
 Invoke-ReverseSocksProxy -remotePort 443 -remoteHost 192.168.49.130 -useSystemProxy -certFingerprint '93061FDB30D69A435ACF96430744C5CC5473D44E'
 ```
 
-Credit: https://github.com/Arno0x/PowerShellScripts/blob/master/proxyTunnel.ps1
+Credit for the System Proxy trick: https://github.com/Arno0x/PowerShellScripts/blob/master/proxyTunnel.ps1
 
 
 # Limitations
