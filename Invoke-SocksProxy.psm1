@@ -8,7 +8,7 @@ License: MIT
  
 .DESCRIPTION
  
-Creates a Socks proxy using powershell.
+Creates a local or "reverse" Socks proxy using powershell.
  
 Supports both Socks4 and Socks5 connections.
 
@@ -16,13 +16,36 @@ This is only a subset of the Socks 4 and 5 protocols: It does not support authen
  
 New features will be implemented in the future. PRs are welcome.
  
- .EXAMPLE
+ .EXAMPLE LOCAL
  
-Create a Socks proxy on port 1234:
+# Create a Socks proxy on port 1234:
 Invoke-SocksProxy -bindPort 1234
 
-Change the number of threads from 200 to 400:
+# Change the number of threads from 200 to 400:
 Invoke-SocksProxy -bindPort 1234 -threads 400
+
+ .EXAMPLE REMOTE
+ 
+# On the remote host: 
+# Generate a private key and self signed cert
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout private.key -out cert.pem
+
+# Get the certificate fingerprint to verify it:
+openssl x509 -in cert.pem -noout -sha1 -fingerprint | cut -d "=" -f 2 | tr -d ":"
+
+# Start the handler
+python ReverseSocksProxyHandler.py 443 1080 ./cert.pem ./private.key
+
+# On the local host:
+Import-Module .\Invoke-SocksProxy.psm1
+Invoke-ReverseSocksProxy -remotePort 443 -remoteHost 192.168.49.130 
+
+# Go through the system proxy:
+Invoke-ReverseSocksProxy -remotePort 443 -remoteHost 192.168.49.130 -useSystemProxy
+
+# Validate certificate
+Invoke-ReverseSocksProxy -remotePort 443 -remoteHost 192.168.49.130 -useSystemProxy -certFingerprint '93061FDB30D69A435ACF96430744C5CC5473D44E'
+
 #>
  
  
