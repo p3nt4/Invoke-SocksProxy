@@ -13,7 +13,7 @@ Import-Module .\Invoke-SocksProxy.psm1
 Invoke-SocksProxy -bindPort 1080
 ```
 
-Increase the number of threads from 200 to 400
+Increase the maximum number of threads from 200 to 400
 ```
 Import-Module .\Invoke-SocksProxy.psm1
 Invoke-SocksProxy -threads 400
