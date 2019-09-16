@@ -18,7 +18,7 @@ Increase the number of threads from 200 to 400
 Import-Module .\Invoke-SocksProxy.psm1
 Invoke-SocksProxy -threads 400
 ```
-## Remote
+## Reverse
 
 Create a "reverse" Socks 4/5 proxy on port 1080 of a remote host:
 ```
