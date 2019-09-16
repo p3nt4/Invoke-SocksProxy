@@ -53,4 +53,5 @@ Credit for the System Proxy trick: https://github.com/Arno0x/PowerShellScripts/b
 - When the Socks Proxy runs out of available threads, new connections cannot be established until a thread is freed.
 - New features will be implemented in the future. PR are welcome.
 
-
+# Disclaimer
+This project is intended for security researchers and penetration testers and should not be used for any illegal activities.
