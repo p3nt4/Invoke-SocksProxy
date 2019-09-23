@@ -55,7 +55,7 @@ def server(handlerPort,proxyPort,certificate,privateKey):
     try:
         dock_socket2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         dock_socket2.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        dock_socket2.bind(('', int(proxyPort)))
+        dock_socket2.bind(('127.0.0.1', int(proxyPort)))
         dock_socket2.listen(5)
         print("Socks Server listening on: " + proxyPort)
         while True:
