@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
- 
-Powershell Socks5 Proxy
+
+Powershell Socks Proxy
  
 Author: p3nt4 (https://twitter.com/xP3nt4)
 License: MIT
@@ -11,7 +11,6 @@ License: MIT
 Creates a local or "reverse" Socks proxy using powershell.
  
 Supports both Socks4 and Socks5 connections.
-
 This is only a subset of the Socks 4 and 5 protocols: It does not support authentication, It does not support UDP or bind requests.
  
 New features will be implemented in the future. PRs are welcome.
@@ -20,7 +19,6 @@ New features will be implemented in the future. PRs are welcome.
  
 # Create a Socks proxy on port 1234:
 Invoke-SocksProxy -bindPort 1234
-
 # Change the number of threads from 200 to 400:
 Invoke-SocksProxy -bindPort 1234 -threads 400
 
@@ -29,24 +27,22 @@ Invoke-SocksProxy -bindPort 1234 -threads 400
 # On the remote host: 
 # Generate a private key and self signed cert
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout private.key -out cert.pem
-
 # Get the certificate fingerprint to verify it:
 openssl x509 -in cert.pem -noout -sha1 -fingerprint | cut -d "=" -f 2 | tr -d ":"
-
 # Start the handler
 python ReverseSocksProxyHandler.py 443 1080 ./cert.pem ./private.key
 
 # On the local host:
 Import-Module .\Invoke-SocksProxy.psm1
 Invoke-ReverseSocksProxy -remotePort 443 -remoteHost 192.168.49.130 
-
 # Go through the system proxy:
 Invoke-ReverseSocksProxy -remotePort 443 -remoteHost 192.168.49.130 -useSystemProxy
-
 # Validate certificate
-Invoke-ReverseSocksProxy -remotePort 443 -remoteHost 192.168.49.130 -useSystemProxy -certFingerprint '93061FDB30D69A435ACF96430744C5CC5473D44E'
-
+Invoke-ReverseSocksProxy -remotePort 443 -remoteHost 192.168.49.130 -certFingerprint '93061FDB30D69A435ACF96430744C5CC5473D44E'
+# Give up after a number of failed connections to the handler:
+Invoke-ReverseSocksProxy -remotePort 443 -remoteHost 192.168.49.130 -maxRetries 10
 #>
+ 
  
  
 [ScriptBlock]$SocksConnectionMgr = {
@@ -280,10 +276,13 @@ function Invoke-ReverseSocksProxy{
 
             [String]$certFingerprint = "",
 
-            [Int]$threads = 200
+            [Int]$threads = 200,
+
+            [Int]$maxRetries = 0
 
      )
     try{
+        $currentTry = 0;
         $rsp = [runspacefactory]::CreateRunspacePool(1,$threads);
         $rsp.CleanupInterval = New-TimeSpan -Seconds 30;
         $rsp.open();
@@ -305,6 +304,7 @@ function Invoke-ReverseSocksProxy{
                 }
                 $cliStream.AuthenticateAsClient($remoteHost)
                 Write-Host "Connected"
+                $currentTry = 0;
                 $buffer = New-Object System.Byte[] 32
                 $cliStream.ReadTimeout = 30000
                 $cliStream.Read($buffer,0,5) | Out-Null
@@ -322,7 +322,12 @@ function Invoke-ReverseSocksProxy{
                 $PS3.BeginInvoke() | Out-Null
                 Write-Host "Threads Left:" $rsp.GetAvailableRunspaces()
             }catch{
-                #Write-Host $_.Exception.Message
+                $currentTry = $currentTry + 1;
+                Write-Error $_;
+                if (($maxRetries -ne 0) -and ($currentTry -eq $maxRetries)){
+                    Write-Error "Cannot connect to handler, max Number of attempts reached, exiting";
+                    Throw "Cannot connect to handler, max Number of attempts reached, exiting";
+                }
                 if ($_.Exception.message -eq 'Exception calling "AuthenticateAsClient" with "1" argument(s): "The remote certificate is invalid according to the validation procedure."'){
                     throw $_
                 }
