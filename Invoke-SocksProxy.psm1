@@ -323,7 +323,6 @@ function Invoke-ReverseSocksProxy{
                 Write-Host "Threads Left:" $rsp.GetAvailableRunspaces()
             }catch{
                 $currentTry = $currentTry + 1;
-                Write-Error $_;
                 if (($maxRetries -ne 0) -and ($currentTry -eq $maxRetries)){
                     Throw "Cannot connect to handler, max Number of attempts reached, exiting";
                 }
