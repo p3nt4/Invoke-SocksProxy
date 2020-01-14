@@ -346,7 +346,7 @@ function Invoke-ReverseSocksProxy{
         }
      }
     catch{
-        throw $_
+        throw $_;
     }
     finally{
         write-host "Server closed."
