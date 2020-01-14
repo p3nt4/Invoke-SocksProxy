@@ -42,7 +42,11 @@ Invoke-ReverseSocksProxy -remotePort 443 -remoteHost 192.168.49.130
 Invoke-ReverseSocksProxy -remotePort 443 -remoteHost 192.168.49.130 -useSystemProxy
 
 # Validate certificate
-Invoke-ReverseSocksProxy -remotePort 443 -remoteHost 192.168.49.130 -useSystemProxy -certFingerprint '93061FDB30D69A435ACF96430744C5CC5473D44E'
+Invoke-ReverseSocksProxy -remotePort 443 -remoteHost 192.168.49.130 -certFingerprint '93061FDB30D69A435ACF96430744C5CC5473D44E'
+
+# Give up after a number of failed connections to the handler:
+Invoke-ReverseSocksProxy -remotePort 443 -remoteHost 192.168.49.130 -maxRetries 10
+
 ```
 
 Credit for the System Proxy trick: https://github.com/Arno0x/PowerShellScripts/blob/master/proxyTunnel.ps1
