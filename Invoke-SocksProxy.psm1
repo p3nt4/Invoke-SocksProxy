@@ -325,7 +325,6 @@ function Invoke-ReverseSocksProxy{
                 $currentTry = $currentTry + 1;
                 Write-Error $_;
                 if (($maxRetries -ne 0) -and ($currentTry -eq $maxRetries)){
-                    Write-Error "Cannot connect to handler, max Number of attempts reached, exiting";
                     Throw "Cannot connect to handler, max Number of attempts reached, exiting";
                 }
                 if ($_.Exception.message -eq 'Exception calling "AuthenticateAsClient" with "1" argument(s): "The remote certificate is invalid according to the validation procedure."'){
