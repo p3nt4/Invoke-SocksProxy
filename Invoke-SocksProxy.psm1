@@ -306,11 +306,11 @@ function Invoke-ReverseSocksProxy{
                 Write-Host "Connected"
                 $currentTry = 0;
                 $buffer = New-Object System.Byte[] 32
-                $buffer2 = New-Object System.Byte[] 85
-                $FakeRequest = [System.Text.Encoding]::Default.GetBytes("GET / HTTP/1.1`nHost: www.host.com`n")
-                $cliStream.Write($FakeRequest,0,34)
-                $cliStream.ReadTimeout = 30000
-                $cliStream.Read($buffer2,0,85) | Out-Null
+                $buffer2 = New-Object System.Byte[] 122
+                $FakeRequest = [System.Text.Encoding]::Default.GetBytes("GET / HTTP/1.1`nHost: "+$remoteHost+"`n`n")
+                $cliStream.Write($FakeRequest,0,$FakeRequest.Length)
+                $cliStream.ReadTimeout = 5000
+                $cliStream.Read($buffer2,0,122) | Out-Null
                 $cliStream.Read($buffer,0,5) | Out-Null
                 $message = [System.Text.Encoding]::ASCII.GetString($buffer)
                 if($message -ne "HELLO"){
@@ -377,5 +377,6 @@ function Get-IpAddress{
     }
     return $ip2
 }
+
 export-modulemember -function Invoke-SocksProxy
 export-modulemember -function Invoke-ReverseSocksProxy
