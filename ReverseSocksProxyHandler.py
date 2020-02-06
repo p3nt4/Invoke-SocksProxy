@@ -25,6 +25,10 @@ def handlerServer(q,handlerPort,certificate,privateKey):
                 client_socket = context.wrap_socket(clear_socket, server_side=True)
                 print("Reverse Socks Connection Received: {}:{}".format(address[0],address[1]))
                 try:
+                    data = ""
+                    while (len(data) < 34):
+                        data += client_socket.recv()
+                    client_socket.send("HTTP/1.1 200 OK\nContent-Length: 9999999999999999999999999\nContent-Type: text/plain\n\n")
                     q.get(False)
                 except:
                     pass
