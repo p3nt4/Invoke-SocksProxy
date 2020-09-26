@@ -58,4 +58,5 @@ Credit for the System Proxy trick: https://github.com/Arno0x/PowerShellScripts/b
 - New features will be implemented in the future. PR are welcome.
 
 # Disclaimer
-This project is intended for security researchers and penetration testers and should not be used for any illegal activities.
+This project is intended for security researchers and penetration testers and should only be used with the approval of system owners.
+
