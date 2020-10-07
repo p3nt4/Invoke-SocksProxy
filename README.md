@@ -32,7 +32,7 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout private.key -out cer
 openssl x509 -in cert.pem -noout -sha1 -fingerprint | cut -d "=" -f 2 | tr -d ":"
 
 # Start the handler
-python ReverseSocksProxyHandler.py 443 1080 ./cert.pem ./private.key
+python3 ReverseSocksProxyHandler.py 443 1080 ./cert.pem ./private.key
 
 # On the local host:
 Import-Module .\Invoke-SocksProxy.psm1
