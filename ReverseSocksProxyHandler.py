@@ -13,7 +13,7 @@ def main(handlerPort, proxyPort, certificate, privateKey):
 
 
 def handlerServer(q, handlerPort, certificate, privateKey):
-    context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
     context.load_cert_chain(certificate, privateKey)
     try:
         dock_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
